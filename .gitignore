@@ -1,0 +1,4 @@
+*.pyc
+.idea
+tests/hgtest
+tests/gittest
