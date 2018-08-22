@@ -2,13 +2,9 @@
 
 A git command line interface based on mercurial.
 
-I have been actively using both git and mercurial for more than a decade -- since before Github existed! -- and while I'm thankful for Github and I appreciate git's elegant object model, I'm still frustrated by git's CLI. 
-I also think it's a shame that more people have not used mercurial: it is the finely crafted luxury sedan to git's Mad Maxian war rig.
-For years I've threatened to do something stupid like port mercurial to git, so when I was recently faced with the task of converting some of our internal code from mercurial's amazing revsets over to git, the walls of my sanity finally caved, and `gilded` was born.
+I have been actively using both git and mercurial for more than a decade -- since before Github existed! -- and while I'm thankful for Github and I appreciate git's elegant object model, I'm still frustrated by git's CLI.  I also think it's a shame that more people have not used mercurial: it is the finely crafted luxury sedan to git's Mad Maxian war rig. For years I've threatened to do something stupid like port mercurial to git, so when I was recently faced with the task of converting some of our internal code from mercurial's amazing revsets over to git, the walls of my sanity finally caved, and `gilded` was born.
 
-To be clear, this project is a science experiment.  
-It's the programming equivalent of stuffing a Ford Mustang engine into a Volvo just for the hell of it.  
-It's a fun hobby, but the further along I get the more I wonder: could this become actually useful, or am I just losing my mind?
+To be clear, this project is a science experiment. It's a fun hobby, but the further along I get the more I wonder: could this become actually useful, or am I just losing my mind?
 
 ## Installation
 
@@ -18,10 +14,7 @@ First, install mercurial and pygit2:
 pip install -r requirements.txt
 ```
 
-Gilded is designed as a mercurial extension.  
-As the name suggests, extensions are intended to extend the behavior of mercurial, but gilded abuses this system to completely take over, by monkey-patching the mercurial internals to be based on libgit2.  
-As a result, once the gilded extension is loaded, mercurial will no longer be able to operate on mercurial repositories. 
-So, if you plan to use mercurial as intended, don't register gilded in your .hgrc file.
+Gilded is designed as a mercurial extension. As the name suggests, extensions are intended to extend the behavior of mercurial, but gilded abuses this system to completely take over, by monkey-patching the mercurial internals to be based on libgit2. As a result, once the gilded extension is loaded, mercurial will no longer be able to operate on mercurial repositories. So, if you plan to use mercurial as intended, don't register gilded in your .hgrc file.
 
 For convenience, you can set up an alias that loads the extension:
 
