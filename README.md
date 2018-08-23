@@ -8,10 +8,10 @@ To be clear, this project is a science experiment. It's a fun hobby, but the fur
 
 ## Installation
 
-First, install mercurial and pygit2:
+First, install the module and its dependencies (mercurial and pygit2):
 
 ```
-pip install -r requirements.txt
+pip install gilded
 ```
 
 Gilded is designed as a mercurial extension.  As the name suggests, extensions are intended to extend the behavior of mercurial, but gilded abuses this system to monkey-patch the mercurial internals to be based on libgit2. As a result, once the gilded extension is loaded, mercurial will no longer be able to operate on mercurial repositories. So if you plan to use mercurial as intended, don't register gilded in your .hgrc file.
@@ -22,14 +22,13 @@ For convenience, you can set up an alias that calls `hg` and loads the extension
 alias au='hg --config extensions.gilded='
 ``` 
 
-As an homage to mercurial's `hg` command, I recommend the name `au`, after gold's periodic symbol.
+As an homage to mercurial's `hg` command, I recommend the name `au`, after the periodic symbol for gold.
 
 ## Commands Currently Supported
 
 ### Query
 
-I think most of these will be pretty straight-forward.  
-The big payoff is `log`, where you can make use of revsets to make complex queries of your git history.
+I think most of these will be pretty straight-forward. The big payoff is `log`, where you can make use of revsets to make complex queries of your git history.
  
 - [ ] `annotate`
 - [ ] `bisect`
@@ -54,7 +53,7 @@ The big payoff is `log`, where you can make use of revsets to make complex queri
 ### Edit
 These are trickier.  I'm not sure how git handles locking around writing to the index. 
 
-- [x] `add`: adding previously tracked files are rejected.  this is legit in git but not hg.  either need to override this or add a new `stage` command
+- [x] `add`: fixme: adding previously tracked files -- which is valid in git -- is rejected.  either need to override this or add a new  command for staging
 - [ ] `addremove`
 - [ ] `backout`
 - [ ] `bookmarks`: not applicable
