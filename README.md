@@ -14,9 +14,9 @@ First, install mercurial and pygit2:
 pip install -r requirements.txt
 ```
 
-Gilded is designed as a mercurial extension. As the name suggests, extensions are intended to extend the behavior of mercurial, but gilded abuses this system to completely take over, by monkey-patching the mercurial internals to be based on libgit2. As a result, once the gilded extension is loaded, mercurial will no longer be able to operate on mercurial repositories. So, if you plan to use mercurial as intended, don't register gilded in your .hgrc file.
+Gilded is designed as a mercurial extension.  As the name suggests, extensions are intended to extend the behavior of mercurial, but gilded abuses this system to monkey-patch the mercurial internals to be based on libgit2. As a result, once the gilded extension is loaded, mercurial will no longer be able to operate on mercurial repositories. So if you plan to use mercurial as intended, don't register gilded in your .hgrc file.
 
-For convenience, you can set up an alias that loads the extension:
+For convenience, you can set up an alias that calls `hg` and loads the extension:
 
 ```
 alias au='hg --config extensions.gilded='
