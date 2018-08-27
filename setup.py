@@ -11,6 +11,6 @@ setup(
     license="MIT",
     keywords=["git", "mercurial"],
     url="https://github.com/chadrik/gilded",
-    module='gilded.py',
+    py_modules=['gilded'],
     install_requires=["mercurial>=4.6.0,<4.7.0", "pygit2"],
 )
