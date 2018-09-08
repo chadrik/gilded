@@ -12,7 +12,7 @@ touch file-B.txt
 mkdir subdir
 touch subdir/file-C.txt
 git add file-A.txt file-B.txt subdir/file-C.txt
-git commit -m "imitial commit"
+git commit -m "initial commit"
 
 # --
 echo "edit1" >> file-A.txt
@@ -22,7 +22,7 @@ git tag "v1.0"
 # --
 git checkout -b branch1
 echo "edit2" >> file-A.txt
-git commit -am "modify file-A"
+git commit -am "modify file-A again"
 
 # --
 touch subdir/file-D.txt
@@ -46,3 +46,4 @@ git commit -am "modify file-C"
 git checkout master
 git rm file-B.txt
 git commit -am "remove file-B"
+git tag "v1.1"
