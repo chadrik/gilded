@@ -35,12 +35,21 @@ from mercurial.node import (
     nullrev,
 )
 
+from mercurial.utils import (
+    stringutil,
+)
+
 if False:
     from typing import *
+    from mercurial import (
+        ui as uimod,
+    )
 
 propertycache = util.propertycache
 namespace = namespaces.namespace
 tolist = namespaces.tolist
+
+# -- General pygit2 utilities
 
 class OidProxy(object):
     """
@@ -79,14 +88,26 @@ class OidProxy(object):
         # return int(self.hex, base=16)
         return self.sortid
 
+def oid(rev):
+    return getattr(rev, 'id', rev)
+
+def branches(repo, commit):
+    result = []
+    for branch_name in repo.branches.local:
+        branch = repo.branches[branch_name]
+        if branch.target == commit.id or repo.descendant_of(branch.target, commit.id):
+            result.append(branch)
+    return result
+
+# --
+
 class gitchangelog(object):
     def __init__(self, repo):
         self._repo = repo
         self._gitrepo = repo._repo
 
     def parentrevs(self, rev):
-        if hasattr(rev, 'id'):
-            rev = rev.id
+        rev = oid(rev)
         commit = self._gitrepo[rev]
         nparents = len(commit.parents)
         if nparents == 0:
@@ -115,7 +136,6 @@ class gitchangelog(object):
 
     def rev(self, node):
         if isinstance(node, bytes):
-            print(type(node), len(node))
             return OidProxy(pygit2.Oid(raw=node))
         elif isinstance(node, pygit2.Oid):
             return OidProxy(node)
@@ -246,6 +266,7 @@ class gitchangectx(context.basectx):
 
     @classmethod
     def __subclasshook__(cls, other):
+        # make gitchangectx appear to inherit from changectx
         if cls is gitchangectx:
             return cls in other.__mro__ or context.changectx in other.__mro__
         return NotImplemented
@@ -435,6 +456,9 @@ class gitchangectx(context.basectx):
             match.bad(fn, _('no such file in rev %s') % self)
 
         m = matchmod.badmatch(match, bad)
+        # print(self.rev())
+        # print(self._changeset)
+        # print(self._changeset.manifest)
         return self._manifest.walk(m)
 
     def matches(self, match):
@@ -483,14 +507,11 @@ class gitindexmap(collections.MutableMapping):
           a  marked for addition
         '''
         item = self._index[key]
-        # print(key)
         status = self._repo.status_file(key)
 
         if status == pygit2.GIT_STATUS_WT_NEW:
             # means untracked
             raise KeyError(key)
-
-        # print(key, status)
 
         map = [
             (pygit2.GIT_STATUS_INDEX_NEW, 'a'),
@@ -923,7 +944,9 @@ class gitrepository(object):
         # type: (bytes) -> Any
         return []
 
+    # FIXME: cache this
     def branchmap(self):
+        # type: () -> Dict[str, List[pygit2.Oid]]
         '''returns a dictionary {branch: [branchheads]} with branchheads
         ordered by increasing revision number'''
         repo = self._repo
@@ -1125,11 +1148,11 @@ class gitfullreposet(smartset.generatorset):
         return super(gitfullreposet, cls).__new__(cls, None, iterasc)
 
     def __init__(self, repo, iterasc=None, root=None, head=None):
-        # type: (Repo, Optional[bool]) -> None
+        # type: (gitrepository, Optional[bool], Optional[OidProxy], Optional[OidProxy]) -> None
         self.repo = repo
         self.gitrepo = repo._repo
-        self.root = root
-        self.head = head
+        self.root = oid(root) if root is not None else None
+        self.head = oid(head) if head is not None else None
         super(gitfullreposet, self).__init__(self._revgen(), iterasc=iterasc)
 
     def _revgen(self):
@@ -1138,9 +1161,12 @@ class gitfullreposet(smartset.generatorset):
             head = self.head
         else:
             head = self.gitrepo.head.target
+
         walker = self.gitrepo.walk(head, order)
         if self.root is not None:
-            walker.hide(self.root)
+            # to match mercurial, we want to hide the parents of root
+            for parent_id in self.gitrepo[self.root].parent_ids:
+                walker.hide(parent_id)
         for i, x in enumerate(walker):
             yield OidProxy(x.id, i)
 
@@ -1204,7 +1230,7 @@ def reachableroots(repo, roots, heads, includepath=False):
 
 def revancestors(repo, revs, followfirst=False, startdepth=None,
                  stopdepth=None, cutfunc=None):
-    # type: (repository.completelocalrepository, smartset.abstractsmartset, bool, Any, Any, Any) -> fullreposet
+    # type: (repository.completelocalrepository, smartset.abstractsmartset, bool, Any, Any, Any) -> smartset.fullreposet
     revs = list(revs)
     assert len(revs) == 1
     return gitfullreposet(repo, head=revs[0])
@@ -1252,7 +1278,7 @@ def overridepredicate(decl):
 
 @overridepredicate('branch(string or set)')
 def branch(repo, subset, x):
-    # type: (repository.completelocalrepository, abstractsmartset, Tuple) -> abstractsmartset
+    # type: (gitrepository, abstractsmartset, Tuple) -> abstractsmartset
     """
     All changesets belonging to the given branch or the branches of the given
     changesets.
@@ -1260,42 +1286,48 @@ def branch(repo, subset, x):
     Pattern matching is supported for `string`. See
     :hg:`help revisions.patterns`.
     """
-    # getbi = repo.revbranchcache().branchinfo
-    # def getbranch(r):
-    #     try:
-    #         return getbi(r)[0]
-    #     except error.WdirUnsupported:
-    #         return repo[r].branch()
+    def getbranchrevs():
+        bs = []
+        s = revset.getset(repo, gitfullreposet(repo), x)
+        for r in s:
+            bs.extend([b.target for b in branches(repo._repo, r)])
+        return bs
+
+    # FIXME: look into sorting by branch name, to keep results stable
+    branchrevs = set()
 
     try:
         b = revset.getstring(x, '')
     except error.ParseError:
         # not a string, but another revspec, e.g. tip()
-        pass
+        branchrevs.update(getbranchrevs())
     else:
-        s = gitfullreposet(repo, head=repo.branchmap()[b][0])
-        return subset & s
-        # kind, pattern, matcher = stringutil.stringmatcher(b)
-        # if kind == 'literal':
-        #     # note: falls through to the revspec case if no branch with
-        #     # this name exists and pattern kind is not specified explicitly
-        #     if pattern in repo.branchmap():
-        #         return subset.filter(lambda r: matcher(getbranch(r)),
-        #                              condrepr=('<branch %r>', b))
-        #     if b.startswith('literal:'):
-        #         raise error.RepoLookupError(_("branch '%s' does not exist")
-        #                                     % pattern)
-        # else:
-        #     return subset.filter(lambda r: matcher(getbranch(r)),
-        #                          condrepr=('<branch %r>', b))
+        kind, pattern, matcher = stringutil.stringmatcher(b)
+        branchmap = repo.branchmap()
+        if kind == 'literal':
+            # note: falls through to the revspec case if no branch with
+            # this name exists and pattern kind is not specified explicitly
+            if pattern in branchmap:
+                branchrevs.add(branchmap[b][0])
+            elif b.startswith('literal:'):
+                raise error.RepoLookupError(_("branch '%s' does not exist")
+                                            % pattern)
+            else:
+                branchrevs.update(getbranchrevs())
+        else:
+            branchrevs.update(r[0] for b, r in branchmap.items() if matcher(b))
 
-    s = revset.getset(repo, gitfullreposet(repo), x)
-    b = set()
-    for r in s:
-        b.add(getbranch(r))
-    c = s.__contains__
-    return subset.filter(lambda r: c(r) or getbranch(r) in b,
-                         condrepr=lambda: '<branch %r>' % revset._sortedb(b))
+    brs = list(branchrevs)
+    if not brs:
+        # FIXME: return empty set or subset?
+        raise NotImplementedError
+
+    s = gitfullreposet(repo, head=brs[0])
+    if len(brs) > 1:
+        for b in brs[1:]:
+            s += gitfullreposet(repo, head=b)
+    return subset & s
+
 
 import mercurial.hg
 mercurial.hg.localrepo = sys.modules[__name__]
