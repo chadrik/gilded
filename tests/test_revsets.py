@@ -41,17 +41,16 @@ def repo(request):
     yield runner
 
 
-def test_tag(repo):
-    assert repo.log("tag('v1.0')") == [
+def test_predicate_ancestors(repo):
+    assert repo.log("ancestors('branch1')") == [
+        'initial commit',
         'modify file-A',
-    ]
-    assert repo.log("tag('re:v\d.\d')") == [
-        'modify file-A',
-        'remove file-B',
+        'modify file-A again',
+        'add file-D',
     ]
 
 
-def test_branch(repo):
+def test_predicate_branch(repo):
     if repo.name == 'git':
         branch1 = [
             'initial commit',
@@ -69,18 +68,68 @@ def test_branch(repo):
     assert repo.log("branch(p1('branch1'))") == branch1
 
 
-def test_merge(repo):
+def test_predicate_branchpoint(repo):
+    assert repo.log("branchpoint()") == [
+        'merge branch1',
+    ]
+
+
+def test_predicate_children(repo):
+    assert repo.log("children(branch1)") == [
+        'merge branch1',
+    ]
+
+
+def test_predicate_desc(repo):
+    assert repo.log("desc('modify ')") == [
+        'modify file-A',
+        'modify file-A again',
+        'modify file-B',
+        'modify file-C',
+    ]
+
+
+def test_predicate_merge(repo):
     assert repo.log("merge()") == [
         'merge branch1',
     ]
 
 
-def test_ancestors(repo):
-    assert repo.log("ancestors('branch1')") == [
+def test_predicate_parents(repo):
+    assert repo.log("p1(branch1)") == [
+        'modify file-A again',
+    ]
+
+
+def test_predicate_roots(repo):
+    assert repo.log("roots(all())") == [
         'initial commit',
+    ]
+
+
+def test_predicate_sort(repo):
+    # git and hg choose different parent order
+    assert repo.log("sort(v1.0::v1.1, date)") == [
         'modify file-A',
         'modify file-A again',
         'add file-D',
+        'modify file-B',
+        'merge branch1',
+        'remove file-B'
+    ]
+
+
+def test_predicate_tag(repo):
+    assert repo.log("tag('v1.0')") == [
+        'modify file-A',
+    ]
+    assert repo.log("tag('re:v\d.\d')") == [
+        'modify file-A',
+        'remove file-B',
+    ]
+    assert repo.log("tag()") == [
+        'modify file-A',
+        'remove file-B',
     ]
 
 
@@ -93,11 +142,6 @@ def test_booleans(repo):
     assert repo.log("branch1 or branch2") == [
         'add file-D',
         'modify file-C',
-    ]
-
-def test_parents(repo):
-    assert repo.log("p1(branch1)") == [
-        'modify file-A again',
     ]
 
 
