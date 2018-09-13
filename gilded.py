@@ -61,7 +61,7 @@ class OidProxy(object):
         self.sortid = sortid
 
     def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, self.id)
+        return '%s(%r, %d)' % (self.__class__.__name__, self.id, self.sortid)
 
     def __str__(self):
         return str(self.id)
@@ -73,10 +73,16 @@ class OidProxy(object):
             return self.id == other
 
     def __lt__(self, other):
-        return self.sortid < other.sortid
+        return self.sortid < int(other)
+
+    def __le__(self, other):
+        return self.sortid <= int(other)
 
     def __gt__(self, other):
-        return self.sortid > other.sortid
+        return self.sortid > int(other)
+
+    def __ge__(self, other):
+        return self.sortid >= int(other)
 
     def __hash__(self):
         return hash(self.id)

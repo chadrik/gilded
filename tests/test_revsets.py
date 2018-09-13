@@ -12,9 +12,11 @@ class BaseRunner(object):
     def __init__(self, datadir):
         self.repodir = os.path.join(datadir, self.name + 'test')
 
-    def log(self, revset):
+    def log(self, revset, template=None):
+        if template is None:
+            template = "{desc}\n"
         output = subprocess.check_output(
-            self.exe + ['log', '-r', revset, '--template', "{desc}\n",
+            self.exe + ['log', '-r', revset, '--template', template,
                         '-R', self.repodir])
         return output.splitlines()
 
@@ -28,8 +30,8 @@ class HgRunner(BaseRunner):
     name = 'hg'
     exe = ['hg']
 
-    def log(self, revset):
-        lines = super(HgRunner, self).log(revset)
+    def log(self, revset, template=None):
+        lines = super(HgRunner, self).log(revset, template)
         return [l for l in lines if not l.startswith("Added tag ")]
 
 
@@ -123,14 +125,14 @@ def test_predicate_tag(repo):
     assert repo.log("tag('v1.0')") == [
         'modify file-A',
     ]
-    assert repo.log("tag('re:v\d.\d')") == [
+    assert set(repo.log("tag('re:v\d.\d')")) == {
         'modify file-A',
         'remove file-B',
-    ]
-    assert repo.log("tag()") == [
+    }
+    assert set(repo.log("tag()")) == {
         'modify file-A',
         'remove file-B',
-    ]
+    }
 
 
 def test_booleans(repo):
@@ -155,3 +157,9 @@ def test_revrange(repo):
         'merge branch1',
         'remove file-B'
     }
+
+
+# def test_template_node(repo):
+#     assert repo.log("tag('v1.0')", "{node}\n") == [
+#         'modify file-A',
+#     ]
