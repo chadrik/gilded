@@ -170,9 +170,31 @@ def test_predicate_head(repo):
         ]
 
 
+def test_predicate_heads(repo):
+    # default branch has a tag commit which gets filtered
+    lines = repo.log("heads(all())", filter=False)
+
+    if repo.name == 'git':
+        assert lines == [
+            'remove file-B',
+            'modify file-C',
+        ]
+    else:
+        assert lines == [
+            'modify file-C',
+            'Added tag v1.1 for changeset 0b96ab0194ac',
+        ]
+
+
 def test_predicate_merge(repo):
     assert repo.log("merge()") == [
         'merge branch1',
+    ]
+
+
+def test_predicate_limit(repo):
+    assert repo.log("limit(sort(v1.0::v1.1, date))") == [
+        'modify file-A',
     ]
 
 
