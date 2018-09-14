@@ -141,7 +141,10 @@ class gitchangelog(object):
             description=commit.message)
 
     def _partialmatch(self, id):
-        return None
+        try:
+            return self._gitrepo.revparse_single(id).id
+        except (KeyError, ValueError):
+            return None
 
     def rev(self, node):
         if isinstance(node, bytes):

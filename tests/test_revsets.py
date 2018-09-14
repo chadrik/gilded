@@ -32,6 +32,7 @@ class BaseRunner(object):
             template = "{desc}\n"
         output = subprocess.check_output(
             self.exe + ['log', '-r', revset, '--template', template,
+                        '--traceback',
                         '-R', self.repodir])
         return output.splitlines()
 
@@ -262,6 +263,15 @@ def test_revrange(repo):
         'merge branch1',
         'remove file-B'
     }
+
+
+def test_revspecs(repo):
+    assert repo.log(repo.refs['v1.0']) == [
+        'modify file-A',
+    ]
+    assert repo.log(repo.refs['v1.0'][:12]) == [
+        'modify file-A',
+    ]
 
 
 def test_template_node(repo):
