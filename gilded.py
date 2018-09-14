@@ -87,6 +87,9 @@ class OidProxy(object):
     def __hash__(self):
         return hash(self.id)
 
+    def __hex__(self):
+        return hex(self.id)
+
     def __int__(self):
         # the real impetus for this method is to pass %d string operators
         # without failure, so while line below is more accurate, it's too
@@ -97,7 +100,7 @@ class OidProxy(object):
 def oid(rev):
     return getattr(rev, 'id', rev)
 
-def branches(repo, commit):
+def branches_with(repo, commit):
     result = []
     for branch_name in repo.branches.local:
         branch = repo.branches[branch_name]
@@ -1150,25 +1153,26 @@ def instance(ui, path, create, intents=None):
 # --- Overrides ---
 
 class gitfullreposet(smartset.generatorset):
-    def __new__(cls, repo, iterasc=None, root=None, head=None):
+    def __new__(cls, repo, iterasc=None, root=None, heads=None):
         return super(gitfullreposet, cls).__new__(cls, None, iterasc)
 
-    def __init__(self, repo, iterasc=None, root=None, head=None):
-        # type: (gitrepository, Optional[bool], Optional[OidProxy], Optional[OidProxy]) -> None
+    def __init__(self, repo, iterasc=None, root=None, heads=None):
+        # type: (gitrepository, Optional[bool], Optional[OidProxy], Optional[Iterable[OidProxy]]) -> None
         self.repo = repo
         self.gitrepo = repo._repo
         self.root = oid(root) if root is not None else None
-        self.head = oid(head) if head is not None else None
+        if heads is not None:
+            self.heads = [oid(h) for h in heads]
+        else:
+            self.heads = [self.gitrepo.branches[branch].target for branch
+                          in self.gitrepo.branches.local]
         super(gitfullreposet, self).__init__(self._revgen(), iterasc=iterasc)
 
     def _revgen(self):
         order = pygit2.GIT_SORT_TOPOLOGICAL | pygit2.GIT_SORT_REVERSE
-        if self.head is not None:
-            head = self.head
-        else:
-            head = self.gitrepo.head.target
-
-        walker = self.gitrepo.walk(head, order)
+        walker = self.gitrepo.walk(None, order)
+        for head in self.heads:
+            walker.push(head)
         if self.root is not None:
             # to match mercurial, we want to hide the parents of root
             for parent_id in self.gitrepo[self.root].parent_ids:
@@ -1232,24 +1236,43 @@ def reachableroots(repo, roots, heads, includepath=False):
     assert len(roots) == 1
     assert len(heads) == 1
 
-    return gitfullreposet(repo, root=roots[0], head=heads[0])
+    return gitfullreposet(repo, root=roots[0], heads=heads)
 
 def revancestors(repo, revs, followfirst=False, startdepth=None,
                  stopdepth=None, cutfunc=None):
     # type: (repository.completelocalrepository, smartset.abstractsmartset, bool, Any, Any, Any) -> smartset.fullreposet
     revs = list(revs)
     assert len(revs) == 1
-    return gitfullreposet(repo, head=revs[0])
+    return gitfullreposet(repo, heads=revs)
 
 def _phase(repo, subset, *targets):
     """helper to select all rev in <targets> phases"""
     return smartset.baseset()
 
+def lower(s):
+    return s.lower()
+
+def upper(s):
+    return s.upper()
+
+nodehex = node.hex
+def hex_(x):
+    if isinstance(x, pygit2.Oid):
+        return str(x)
+    else:
+        return nodehex(x)
+
+# pygit2 returns unicode, and handles encoding on its own, though I'm
+# not completely sure this is free of collateral damage
+encoding.lower = lower
+encoding.upper = upper
+
 # def short(n):
 #     return node.hex(bytes(n)[:6])
 #
 # node.short = short
-
+node.hex = hex_
+context.hex = hex_
 dagop.reachableroots = reachableroots
 dagop.revancestors = revancestors
 
@@ -1292,21 +1315,18 @@ def branch(repo, subset, x):
     Pattern matching is supported for `string`. See
     :hg:`help revisions.patterns`.
     """
-    def getbranchrevs():
-        bs = []
-        s = revset.getset(repo, gitfullreposet(repo), x)
-        for r in s:
-            bs.extend([b.target for b in branches(repo._repo, r)])
-        return bs
+    def getbranches(r):
+        return set([b.target for b in branches_with(repo._repo, r)])
 
     # FIXME: look into sorting by branch name, to keep results stable
     branchrevs = set()
+    revspec = False
 
     try:
         b = revset.getstring(x, '')
     except error.ParseError:
         # not a string, but another revspec, e.g. tip()
-        branchrevs.update(getbranchrevs())
+        revspec = True
     else:
         kind, pattern, matcher = stringutil.stringmatcher(b)
         branchmap = repo.branchmap()
@@ -1319,21 +1339,26 @@ def branch(repo, subset, x):
                 raise error.RepoLookupError(_("branch '%s' does not exist")
                                             % pattern)
             else:
-                branchrevs.update(getbranchrevs())
+                revspec = True
         else:
             branchrevs.update(r[0] for b, r in branchmap.items() if matcher(b))
 
-    brs = list(branchrevs)
-    if not brs:
-        # FIXME: return empty set or subset?
-        raise NotImplementedError
+    if not revspec:
+        brs = list(branchrevs)
+        if not brs:
+            # FIXME: return empty set or subset?
+            raise NotImplementedError
 
-    s = gitfullreposet(repo, head=brs[0])
-    if len(brs) > 1:
-        for b in brs[1:]:
-            s += gitfullreposet(repo, head=b)
-    return subset & s
-
+        s = gitfullreposet(repo, heads=brs)
+        return subset & s
+    else:
+        s = revset.getset(repo, gitfullreposet(repo), x)
+        b = set()
+        for r in s:
+            b.update(getbranches(r))
+        c = s.__contains__
+        return subset.filter(lambda r: c(r) or getbranches(r) & b,
+                             condrepr=lambda: '<branch %r>' % revset._sortedb(b))
 
 import mercurial.hg
 mercurial.hg.localrepo = sys.modules[__name__]

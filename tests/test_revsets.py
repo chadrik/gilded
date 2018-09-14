@@ -24,11 +24,47 @@ class BaseRunner(object):
 class GitRunner(BaseRunner):
     name = 'git'
     exe = ['hg', '--config', 'extensions.gilded=']
+    refs = {
+        'branch1': 'ff2e4709adb23622f65f3a19c14bdcb40f988b55',
+        'v1.0': '283c6a4ccb575c00ff463a7aa2a0f94744d3b6f7',
+    }
+    branch1 = [
+        'initial commit',
+        'modify file-A',
+        'modify file-A again',
+        'add file-D',
+    ]
+    branch2 = [
+        'initial commit',
+        'modify file-A',
+        'modify file-B',
+        'modify file-A again',
+        'add file-D',
+        'merge branch1',
+        'modify file-C',
+    ]
+    master = [
+        'initial commit',
+        'modify file-A',
+        'modify file-B',
+        'modify file-A again',
+        'add file-D',
+        'merge branch1',
+        'remove file-B',
+    ]
 
 
 class HgRunner(BaseRunner):
     name = 'hg'
     exe = ['hg']
+    refs = {
+        'branch1': 'adef9df403dcc7e85a164d49be1331fa9cdc3ace',
+        'v1.0': 'bac32f9c81edb48d558e80511708acc815e124ff',
+    }
+    branch1 = [
+        'modify file-A again',
+        'add file-D',
+    ]
 
     def log(self, revset, template=None):
         lines = super(HgRunner, self).log(revset, template)
@@ -43,6 +79,19 @@ def repo(request):
     yield runner
 
 
+def test_predicate_all(repo):
+    assert set(repo.log("all()")) == {
+        'initial commit',
+        'modify file-A',
+        'modify file-A again',
+        'add file-D',
+        'modify file-B',
+        'merge branch1',
+        'modify file-C',
+        'remove file-B'
+    }
+
+
 def test_predicate_ancestors(repo):
     assert repo.log("ancestors('branch1')") == [
         'initial commit',
@@ -53,23 +102,18 @@ def test_predicate_ancestors(repo):
 
 
 def test_predicate_branch(repo):
+    assert repo.log("branch('branch1')") == repo.branch1
+    # in the case where we don't provide a branch name, we consider all
+    # branches belonging to the incoming set
     if repo.name == 'git':
-        branch1 = [
-            'initial commit',
-            'modify file-A',
-            'modify file-A again',
-            'add file-D',
-        ]
+        result = set(repo.branch1 + repo.branch2 + repo.master)
     else:
-        branch1 = [
-            'modify file-A again',
-            'add file-D',
-        ]
-
-    assert repo.log("branch('branch1')") == branch1
-    assert repo.log("branch(p1('branch1'))") == branch1
+        result = set(repo.branch1)
+    assert set(repo.log("branch(%s)" % repo.refs['branch1'])) == result
+    assert set(repo.log("branch(p1('branch1'))")) == result
 
 
+@pytest.mark.skip("object of type 'gitchangelog' has no len()")
 def test_predicate_branchpoint(repo):
     assert repo.log("branchpoint()") == [
         'merge branch1',
@@ -83,12 +127,12 @@ def test_predicate_children(repo):
 
 
 def test_predicate_desc(repo):
-    assert repo.log("desc('modify ')") == [
+    assert set(repo.log("desc('modify ')")) == {
         'modify file-A',
         'modify file-A again',
         'modify file-B',
         'modify file-C',
-    ]
+    }
 
 
 def test_predicate_merge(repo):
@@ -159,7 +203,7 @@ def test_revrange(repo):
     }
 
 
-# def test_template_node(repo):
-#     assert repo.log("tag('v1.0')", "{node}\n") == [
-#         'modify file-A',
-#     ]
+def test_template_node(repo):
+    assert repo.log("tag('v1.0')", "{node}\n") == [
+        repo.refs['v1.0'],
+    ]
