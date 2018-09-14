@@ -1,2 +1,2 @@
 mercurial==4.6.1
-pygit2
+git+https://github.com/chadrik/pygit2@descendant_of#pygit2
