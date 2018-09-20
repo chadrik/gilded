@@ -12,5 +12,6 @@ setup(
     keywords=["git", "mercurial"],
     url="https://github.com/chadrik/gilded",
     py_modules=['gilded'],
-    install_requires=["mercurial>=4.6.0,<4.7.0", "pygit2"],
+    # relies on a feature I added to pygit2
+    install_requires=["mercurial>=4.6.0,<4.7.0", "pygit2>=0.27.2"],
 )

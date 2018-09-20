@@ -1,2 +1,2 @@
-mercurial==4.6.1
-git+https://github.com/chadrik/pygit2@descendant_of#pygit2
+mercurial>=4.6.0,<4.7.0
+pygit2>=0.27.2

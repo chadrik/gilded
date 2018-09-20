@@ -8,10 +8,9 @@ To be clear, this project is a science experiment. It's a fun hobby, but the fur
 
 ## Installation
 
-First, install the module and its dependencies (mercurial and pygit2).  For now you have to use a requirements file because it relies on an unreleased version of pygit2:
+First, install the module and its dependencies (mercurial and pygit2). 
 
 ```
-pip install -r requirements
 pip install gilded
 ```
 
@@ -37,7 +36,9 @@ Here's an example that I stole from this [great article](http://devanla.com/auto
 >    $ hg log -r 'last(user(devanla) and not(branch(default)) and heads(all()) and not closed(), 2)'
 >    ```
 
-It's also becoming usable for basic workflows (`init`, `add`, `commit`, `status`).  See below for the complete list of supported commands and their caveats. 
+See the tests for more basic examples.
+
+Gilded is also becoming usable for simple workflows (`init`, `add`, `commit`, `status`).  See below for the complete list of supported commands and their caveats. 
 
 ## Commands Currently Supported
 
