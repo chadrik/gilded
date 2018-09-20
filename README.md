@@ -8,9 +8,10 @@ To be clear, this project is a science experiment. It's a fun hobby, but the fur
 
 ## Installation
 
-First, install the module and its dependencies (mercurial and pygit2):
+First, install the module and its dependencies (mercurial and pygit2).  For now you have to use a requirements file because it relies on an unreleased version of pygit2:
 
 ```
+pip install -r requirements
 pip install gilded
 ```
 
@@ -23,6 +24,20 @@ alias au='hg --config extensions.gilded='
 ``` 
 
 As an homage to mercurial's `hg` command, I recommend the name `au`, after the periodic symbol for gold.
+
+## But seriously, Why?
+
+The main reason to use this project right now is to use mercurial's [revsets](https://www.mercurial-scm.org/repo/hg/help/revsets) query language with the `log` and `glog` (ascii graph version of log) commands.
+
+Here's an example that I stole from this [great article](http://devanla.com/automate-your-hg-workflow.html):
+
+> To view the last two changsets that were committed by user 'devanla' but only on any non-default branch. 
+>
+>    ```
+>    $ hg log -r 'last(user(devanla) and not(branch(default)) and heads(all()) and not closed(), 2)'
+>    ```
+
+It's also becoming usable for basic workflows (`init`, `add`, `commit`, `status`).  See below for the complete list of supported commands and their caveats. 
 
 ## Commands Currently Supported
 
