@@ -1318,7 +1318,7 @@ def branch(repo, subset, x):
     Pattern matching is supported for `string`. See
     :hg:`help revisions.patterns`.
     """
-    def getbranches(r):
+    def getbranchrevs(r):
         return set([b.target for b in branches_with(repo._repo, r)])
 
     # FIXME: look into sorting by branch name, to keep results stable
@@ -1346,22 +1346,20 @@ def branch(repo, subset, x):
         else:
             branchrevs.update(r[0] for b, r in branchmap.items() if matcher(b))
 
-    if not revspec:
-        brs = list(branchrevs)
-        if not brs:
-            # FIXME: return empty set or subset?
-            raise NotImplementedError
-
-        s = gitfullreposet(repo, heads=brs)
-        return subset & s
-    else:
+    if revspec:
+        # get all the branches in x
         s = revset.getset(repo, gitfullreposet(repo), x)
-        b = set()
         for r in s:
-            b.update(getbranches(r))
-        c = s.__contains__
-        return subset.filter(lambda r: c(r) or getbranches(r) & b,
-                             condrepr=lambda: '<branch %r>' % revset._sortedb(b))
+            branchrevs.update(getbranchrevs(r))
+
+    if not branchrevs:
+        # FIXME: return empty set or subset?
+        raise NotImplementedError
+
+    brs = list(branchrevs)
+    s = gitfullreposet(repo, heads=brs)
+    return subset & s
+
 
 import mercurial.hg
 mercurial.hg.localrepo = sys.modules[__name__]
