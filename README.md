@@ -44,7 +44,7 @@ Gilded is also becoming usable for simple workflows (`init`, `add`, `commit`, `s
 
 ### Query
 
-I think most of these will be pretty straight-forward. The big payoff is `log`, where you can make use of revsets to make complex queries of your git history.
+I think most of these will be pretty straight-forward. The big payoff is `log`, where you can make use of revsets to make complex queries of your git history (see below for which revset features are supported).
  
 - [ ] `annotate`
 - [ ] `bisect`
@@ -109,3 +109,83 @@ These are trickier.  I'm not sure how git handles locking around writing to the 
 - [ ] `pull`
 - [ ] `push`
 - [ ] `serve`
+
+## Revset Features Currently Supported
+
+### Operators
+
+- [x] `not x`
+- [x] `x::y`
+- [x] `x:y`
+- [x] `x and y`
+- [x] `x or y`
+- [x] `x - y`
+- [x] `x % y`
+- [x] `x^n`
+- [x] `x~n`
+- [x] `x ## y`
+- [x] `x^`
+
+### Predicates
+
+- [ ] `adds(pattern)`
+- [x] `all()`
+- [ ] `ancestor(*changeset)`
+- [x] `ancestors(set[, depth])`
+- [x] `author(string)`
+- [ ] `bisect(string)`
+- [ ] `bookmark([name])`: N/A
+- [x] `branch(string or set)`: TODO: add support for remote vs local branches.  NOTE: In mercurial, a commit belong to one branch. In git this predicate returns many more commits, and is vary on the same history as heads are added or removed.
+- [ ] `branchpoint()`
+- [ ] `bundle()`: N/A
+- [x] `children(set)`
+- [ ] `closed()`: N/A
+- [ ] `contains(pattern)`
+- [ ] `converted([id])`: N/A
+- [x] `date(interval)`
+- [x] `desc(string)`
+- [ ] `descendants(set[, depth])`
+- [ ] `destination([set])`
+- [ ] `draft()`: N/A
+- [ ] `extinct()`: N/A
+- [ ] `extra(label, [value])`
+- [ ] `file(pattern)`
+- [ ] `filelog(pattern)`
+- [x] `first(set, [n])`
+- [ ] `follow([file[, startrev]])`
+- [ ] `followlines(file, fromline:toline[, startrev=., descend=False])`
+- [x] `grep(regex)`
+- [x] `head()`
+- [x] `heads(set)`
+- [ ] `hidden()`: N/A
+- [ ] `id(string)`: N/A
+- [ ] `keyword(string)`
+- [x] `last(set, [n])`
+- [x] `limit(set[, n[, offset]])`
+- [ ] `matching(revision [, field])`
+- [ ] `max(set)`: N/A
+- [x] `merge()`
+- [ ] `min(set)`: N/A
+- [ ] `modifies(pattern)`
+- [ ] `named(namespace)`: N/A
+- [ ] `obsolete()`: N/A
+- [ ] `only(set, [set])`
+- [ ] `origin([set])`: N/A
+- [ ] `outgoing([path])`
+- [x] `p1([set])`
+- [x] `p2([set])`
+- [x] `parents([set])`
+- [ ] `present(set)`
+- [ ] `public()`
+- [ ] `remote([id [,path]])`
+- [ ] `removes(pattern)`
+- [ ] `rev(number)`: N/A
+- [ ] `reverse(set)`
+- [x] `roots(set)`
+- [ ] `secret()`: N/A
+- [x] `sort(set[, [-]key... [, ...]])`
+- [ ] `subrepo([pattern])`
+- [ ] `successors(set)`
+- [x] `tag([name])`
+- [x] `user(string)`
+
