@@ -1237,7 +1237,6 @@ def reachableroots(repo, roots, heads, includepath=False):
     heads = list(heads)
 
     assert len(roots) == 1
-    assert len(heads) == 1
 
     return gitfullreposet(repo, root=roots[0], heads=heads)
 
@@ -1245,7 +1244,6 @@ def revancestors(repo, revs, followfirst=False, startdepth=None,
                  stopdepth=None, cutfunc=None):
     # type: (repository.completelocalrepository, smartset.abstractsmartset, bool, Any, Any, Any) -> smartset.fullreposet
     revs = list(revs)
-    assert len(revs) == 1
     return gitfullreposet(repo, heads=revs)
 
 def _phase(repo, subset, *targets):

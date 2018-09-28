@@ -270,6 +270,8 @@ def test_revrange(repo):
         'remove file-B'
     }
 
+    assert repo.log("v1.0::limit(desc('EMPTY'))") == []
+
 
 def test_revspecs(repo):
     assert repo.log(repo.refs['v1.0']) == [
