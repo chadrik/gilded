@@ -247,6 +247,25 @@ def test_predicate_user(repo):
     assert set(repo.log("user('Chad')")) == set(repo.all)
 
 
+def test_complex(repo):
+    query = "sort(p1({0}::{1} and not {0} and {2}) and {0}::{1}, date)"
+
+    assert repo.log(query.format('v1.0', repo.master, "tag('re:v\d\.\d')")) == [
+        'merge branch1',
+    ]
+
+    assert repo.log(query.format('roots(all())', repo.master, "tag('re:v\d\.\d')")) == [
+        'initial commit',
+        'merge branch1',
+    ]
+
+    assert repo.log('reverse(ancestors(%s))' % query.format('roots(all())', repo.master, "desc('add file-D')")) == [
+        'modify file-A again',
+        'modify file-A',
+        'initial commit',
+    ]
+
+
 def test_booleans(repo):
     assert repo.log("v1.0 or v1.1") == [
         'modify file-A',
