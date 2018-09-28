@@ -17,7 +17,7 @@ hg commit -m "initial commit" --user "Chad Dombrova <chad@noemail.com>" --date "
 # --
 echo "edit1" >> file-A.txt
 hg commit -m "modify file-A" --user "Chad Dombrova <chad@noemail.com>" --date "Fri Aug 31 12:10:00 2018 -0700"
-hg tag "v1.0"
+hg tag "v1.0"  --user "Chad Dombrova <chad@noemail.com>" --date "Fri Aug 31 12:10:00 2018 -0700"
 
 # --
 hg branch branch1
@@ -47,4 +47,4 @@ hg commit -m "modify file-C" --user "Chad Dombrova <chad@noemail.com>" --date "F
 hg up default
 hg rm file-B.txt
 hg commit -m "remove file-B" --user "Chad Dombrova <chad@noemail.com>" --date "Fri Aug 31 13:10:00 2018 -0700"
-hg tag "v1.1"
+hg tag "v1.1"  --user "Chad Dombrova <chad@noemail.com>" --date "Fri Aug 31 13:10:00 2018 -0700"

@@ -78,7 +78,7 @@ class HgRunner(BaseRunner):
     exe = ['hg']
     master = 'default'
     refs = {
-        'branch1': 'adef9df403dcc7e85a164d49be1331fa9cdc3ace',
+        'branch1': 'd3f9491a31d3912b11c4d4864bda16c380265a63',
         'v1.0': 'bac32f9c81edb48d558e80511708acc815e124ff',
     }
     branch_commits = {
@@ -173,7 +173,7 @@ def test_predicate_head(repo):
         assert lines == [
             'add file-D',
             'modify file-C',
-            'Added tag v1.1 for changeset 0b96ab0194ac',
+            'Added tag v1.1 for changeset 42ea125c5e0d',
         ]
 
 
@@ -189,7 +189,7 @@ def test_predicate_heads(repo):
     else:
         assert lines == [
             'modify file-C',
-            'Added tag v1.1 for changeset 0b96ab0194ac',
+            'Added tag v1.1 for changeset 42ea125c5e0d',
         ]
 
 
