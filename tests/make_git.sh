@@ -2,8 +2,8 @@
 
 set -e
 
-mkdir gittest
-cd gittest
+mkdir gittest_master
+cd gittest_master
 git init
 
 export GIT_AUTHOR_NAME="Chad Dombrova"
@@ -66,3 +66,18 @@ export GIT_COMMITTER_DATE="Fri Aug 31 13:10:00 2018 -0700"
 export GIT_AUTHOR_DATE=$GIT_COMMITTER_DATE
 git commit -am "remove file-B"
 git tag "v1.1"
+
+# --
+echo "edit1" >> subdir/file-D.txt
+export GIT_COMMITTER_DATE="Fri Aug 31 13:20:00 2018 -0700"
+export GIT_AUTHOR_DATE=$GIT_COMMITTER_DATE
+git commit -am "modify file-D"
+
+# --
+cd ..
+git clone gittest_master gittest
+cd gittest
+git checkout branch1
+git checkout branch2
+git checkout master
+git reset --hard v1.1

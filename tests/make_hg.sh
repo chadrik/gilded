@@ -2,8 +2,8 @@
 
 set -e
 
-mkdir hgtest
-cd hgtest
+mkdir hgtest_master
+cd hgtest_master
 hg init
 
 # --
@@ -48,3 +48,16 @@ hg up default
 hg rm file-B.txt
 hg commit -m "remove file-B" --user "Chad Dombrova <chad@noemail.com>" --date "Fri Aug 31 13:10:00 2018 -0700"
 hg tag "v1.1"  --user "Chad Dombrova <chad@noemail.com>" --date "Fri Aug 31 13:10:00 2018 -0700"
+
+# --
+cd ..
+hg clone hgtest_master hgtest
+
+# --
+cd hgtest_master
+echo "edit1" >> subdir/file-D.txt
+hg commit -m "modify file-D" --user "Chad Dombrova <chad@noemail.com>" --date "Fri Aug 31 13:20:00 2018 -0700"
+
+# --
+cd ../hgtest
+hg pull

@@ -102,10 +102,11 @@ def oid(rev):
 
 def branches_with(repo, commit):
     result = []
-    for branch_name in repo.branches.local:
+    for branch_name in repo.branches:
         branch = repo.branches[branch_name]
-        if branch.target == commit.id or repo.descendant_of(branch.target, commit.id):
-            result.append(branch)
+        target = branch.peel().id
+        if target == commit.id or repo.descendant_of(target, commit.id):
+            result.append(target)
     return result
 
 # --
@@ -1167,8 +1168,8 @@ class gitfullreposet(smartset.generatorset):
         if heads is not None:
             self.heads = [oid(h) for h in heads]
         else:
-            self.heads = [self.gitrepo.branches[branch].target for branch
-                          in self.gitrepo.branches.local]
+            self.heads = [self.gitrepo.branches[branch].peel().id for branch
+                          in self.gitrepo.branches]
         super(gitfullreposet, self).__init__(self._revgen(), iterasc=iterasc)
 
     def _revgen(self):
@@ -1317,7 +1318,7 @@ def branch(repo, subset, x):
     :hg:`help revisions.patterns`.
     """
     def getbranchrevs(r):
-        return set([b.target for b in branches_with(repo._repo, r)])
+        return set(branches_with(repo._repo, r))
 
     # FIXME: look into sorting by branch name, to keep results stable
     branchrevs = set()

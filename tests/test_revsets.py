@@ -21,7 +21,8 @@ class BaseRunner(object):
         'modify file-B',
         'merge branch1',
         'modify file-C',
-        'remove file-B'
+        'remove file-B',
+        'modify file-D',
     ]
 
     def __init__(self, datadir):
@@ -69,7 +70,17 @@ class GitRunner(BaseRunner):
             'add file-D',
             'merge branch1',
             'remove file-B',
-        ]
+        ],
+        'origin/master': [
+            'initial commit',
+            'modify file-A',
+            'modify file-B',
+            'modify file-A again',
+            'add file-D',
+            'merge branch1',
+            'remove file-B',
+            'modify file-D',
+        ],
     }
 
 
@@ -129,7 +140,8 @@ def test_predicate_branch(repo):
     if repo.name == 'git':
         result = set(repo.branch_commits['branch1'] +
                      repo.branch_commits['branch2'] +
-                     repo.branch_commits['master'])
+                     repo.branch_commits['master'] +
+                     repo.branch_commits['origin/master'])
     else:
         result = set(repo.branch_commits['branch1'])
     assert set(repo.log("branch(%s)" % repo.refs['branch1'])) == result
@@ -155,6 +167,7 @@ def test_predicate_desc(repo):
         'modify file-A again',
         'modify file-B',
         'modify file-C',
+        'modify file-D',
     }
 
 
@@ -173,24 +186,15 @@ def test_predicate_head(repo):
         assert lines == [
             'add file-D',
             'modify file-C',
-            'Added tag v1.1 for changeset 42ea125c5e0d',
+            'modify file-D',
         ]
 
 
 def test_predicate_heads(repo):
-    # default branch has a tag commit which gets filtered
-    lines = repo.log("heads(all())", filter=False)
-
-    if repo.name == 'git':
-        assert lines == [
-            'remove file-B',
-            'modify file-C',
-        ]
-    else:
-        assert lines == [
-            'modify file-C',
-            'Added tag v1.1 for changeset 42ea125c5e0d',
-        ]
+    assert set(repo.log("heads(all())")) == {
+        'modify file-D',
+        'modify file-C',
+    }
 
 
 def test_predicate_merge(repo):
