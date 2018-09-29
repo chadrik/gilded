@@ -277,6 +277,18 @@ def test_booleans(repo):
         'modify file-C',
     ]
 
+    assert repo.log("v1.0 or desc('EMPTY')") == [
+        'modify file-A'
+    ]
+
+    assert repo.log("desc('EMPTY') or v1.0") == [
+        'modify file-A'
+    ]
+
+    assert repo.log("v1.0 and desc('EMPTY')") == []
+
+    assert repo.log("desc('EMPTY') and v1.0") == []
+
 
 def test_revrange(repo):
     # git and hg choose different parent order
